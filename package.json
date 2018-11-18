@@ -3,9 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "firebase": "^5.5.8",
+    "highlight.js": "^9.13.1",
+    "htmr": "^0.7.0",
+    "markdown-it": "^8.4.2",
+    "markdown-it-task-lists": "^2.1.1",
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
-    "react-scripts": "2.1.1"
+    "react-scripts": "2.1.1",
+    "remark": "^10.0.1",
+    "remove-markdown": "^0.3.0",
+    "strip-markdown": "^3.0.2",
+    "styled-components": "^4.1.1",
+    "throttle-debounce": "^2.0.1",
+    "typescript": "3.1.6"
   },
   "scripts": {
     "start": "react-scripts start",
