@@ -16,6 +16,7 @@
     "strip-markdown": "^3.0.2",
     "styled-components": "^4.1.1",
     "throttle-debounce": "^2.0.1",
+    "typeplate-starter-kit": "^3.0.2",
     "typescript": "3.1.6"
   },
   "scripts": {

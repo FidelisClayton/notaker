@@ -2,9 +2,9 @@ import styled from 'styled-components'
 
 const TextEditor = styled.textarea`
   flex: 1;
-  font-family: 'Ubuntu Mono', monospace;
+  font-family: 'IBM Plex Mono', monospace;
   height: 100vh;
-  font-size: 1.5rem;
+  font-size: 1rem;
   resize: none;
   border: 0;
   margin: 0;

@@ -2,12 +2,13 @@ import React from 'react'
 import styled from 'styled-components'
 
 const StyledMenu = styled.nav`
-  padding-top: 1em;
-  padding-bottom: 1em;
+  padding: 1em;
   width: 250px;
   height: 100vh;
   background: #191e24;
   color: #FFFFFF;
+  box-sizing: border-box;
+  font-family: 'IBM Plex Sans', sans-serif;
 
   ul {
     list-style-type: none;
