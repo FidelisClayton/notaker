@@ -3,6 +3,7 @@ import Prism from 'prismjs'
 import 'prismjs/components/prism-markdown'
 import { debounce } from 'throttle-debounce'
 import removeMd from 'remove-markdown'
+import uuidv4 from 'uuid/v4'
 
 import { db } from './firebase'
 import ShowMarkdown from './components/ShowMarkdown'
@@ -22,7 +23,9 @@ class App extends Component {
   }
 
   state = {
-    id: "teste",
+    newNoteTitle: 'New Note',
+    notes: [],
+    id: "",
     title: "New Note",
     updatedAt: 0,
     markdown: "",
@@ -31,10 +34,10 @@ class App extends Component {
   }
 
   componentWillMount () {
-    db.ref(this.state.id).once('value', (snapshot) => {
+    db.ref('/notes-indexes').once('value', (snapshot) => {
       if (snapshot.val()) {
         this.setState({
-          ...snapshot.val(),
+          notes: Object.values(snapshot.val()),
           loading: false
         })
       }
@@ -42,16 +45,23 @@ class App extends Component {
   }
 
   saveMarkdown = (markdown) => {
-    db.ref(this.state.id).set({
+    db.ref(`/notes/${this.state.id}`).set({
       updatedAt: Date.now(),
       markdown: markdown
     })
   }
 
   handleViewNote = (id) => (event) => {
-    db.ref(id).once('value', (snapshot) => {
+    this.setState({
+      id
+    })
+
+    db.ref(`/notes/${id}`).once('value', (snapshot) => {
       if (snapshot.val()) {
-        this.setState({ ...snapshot.val() })
+        this.setState({
+          id: id,
+          ...snapshot.val()
+        })
       } else {
         this.setState({
           id: id,
@@ -59,6 +69,59 @@ class App extends Component {
           createdAt: Date.now()
         })
       }
+    })
+  }
+
+  handleNewNote = () => {
+    const id = uuidv4()
+
+    db.ref(`/notes/${id}`).set({
+      markdown: '',
+      createdAt: Date.now()
+    })
+
+    const newNote = {
+      id: id,
+      title: 'New Title',
+      markdown: '',
+      createdAt: Date.now()
+    }
+
+    this.setState({
+      notes: [ newNote, ...this.state.notes ],
+      noteTitleEditing: id
+    })
+  }
+
+  handleNewNoteTitleChange = (event) => {
+    this.setState({
+      newNoteTitle: event.currentTarget.value
+    })
+  }
+
+  handleNewNoteTitleSubmit = noteId => event => {
+    event.preventDefault()
+
+    db.ref(`/${noteId}/title`).set(this.state.newNoteTitle)
+
+    this.setState({
+      newNoteTitle: 'New Note',
+      noteTitleEditing: '',
+      notes: this.state.notes.map(note => {
+        if (note.id === noteId) {
+          return {
+            ...note,
+            title: this.state.newNoteTitle,
+          }
+        } else {
+          return note
+        }
+      })
+    })
+
+    db.ref(`/notes-indexes/${noteId}`).set({
+      id: noteId,
+      title: this.state.newNoteTitle
     })
   }
 
@@ -81,7 +144,15 @@ class App extends Component {
     if (!this.state.loading) {
       return (
         <div style={{ display: 'flex'}}>
-          <Menu onViewNote={this.handleViewNote} />
+          <Menu
+            onViewNote={this.handleViewNote}
+            onNewNote={this.handleNewNote}
+            onNewNoteTitleChange={this.handleNewNoteTitleChange}
+            onNewNoteTitleSubmit={this.handleNewNoteTitleSubmit}
+            noteTitleEditing={this.state.noteTitleEditing}
+            notes={this.state.notes}
+            activeItem={this.state.id}
+          />
           <TextEditor
             onChange={this.onNoteChange}
             value={this.state.markdown}

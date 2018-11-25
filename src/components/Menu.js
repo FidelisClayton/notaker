@@ -1,5 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
+import MenuDivider from './MenuDivider'
 
 const StyledMenu = styled.nav`
   padding: 1em;
@@ -20,7 +21,6 @@ const StyledMenu = styled.nav`
     text-decoration: none;
     color: #FFFFFF;
   }
-
 `
 
 const StyledMenuItem = styled.li`
@@ -30,27 +30,62 @@ const StyledMenuItem = styled.li`
   &:hover {
     color: rgba(255, 255, 255, 0.8);
   }
+
+  input {
+    background: transparent;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid white;
+    padding: 0;
+    color: rgba(255,255,255,0.8);
+    font-size: 1rem;
+  }
 `
 
-const Menu = ({ onViewNote }) => (
+const Menu = ({
+  onViewNote,
+  onNewNote,
+  onNewNoteTitleChange,
+  onNewNoteTitleSubmit,
+  noteTitleEditing,
+  notes,
+  activeItem
+}) => (
   <StyledMenu>
+    <MenuDivider
+      actionIcon="+"
+      onActionClick={onNewNote}
+    >
+      My notes
+    </MenuDivider>
+
     <ul>
-      <a
-        href="#/nota1"
-        onClick={onViewNote('nota1')}
-      >
-        <StyledMenuItem active>
-          Nota 1
-        </StyledMenuItem>
-      </a>
-      <a
-        href="#/nota2"
-        onClick={onViewNote('nota2')}
-      >
-        <StyledMenuItem>
-          Nota 2
-        </StyledMenuItem>
-      </a>
+      { notes.map(note => (
+        <a
+          href={`#/${note.id}`}
+          onClick={onViewNote(note.id)}
+          key={note.id}
+        >
+          { note.id === noteTitleEditing && (
+            <StyledMenuItem active={activeItem === note.id}>
+              <form onSubmit={onNewNoteTitleSubmit(note.id)}>
+                <input
+                  autoFocus
+                  defaultValue={note.title}
+                  onChange={onNewNoteTitleChange}
+                  onBlur={onNewNoteTitleSubmit(note.id)}
+                />
+              </form>
+            </StyledMenuItem>
+          )}
+
+          { note.id !== noteTitleEditing && (
+            <StyledMenuItem active={activeItem === note.id}>
+              { note.title }
+            </StyledMenuItem>
+          )}
+        </a>
+      ))}
     </ul>
   </StyledMenu>
 )

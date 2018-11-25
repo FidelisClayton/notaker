@@ -114,7 +114,7 @@ class TextEditor extends Component {
         </Backdrop>
 
         <StyledTextEditor
-          defaultValue={this.props.value}
+          value={this.props.value}
           onChange={this.handleOnChange}
           onScroll={this.handleTextAreaScroll}
           ref={this.textAreaRef}
