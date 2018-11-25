@@ -30,18 +30,25 @@ class App extends Component {
     updatedAt: 0,
     markdown: "",
     highlights: "",
-    loading: true
+    loading: true,
+    error: null
   }
 
-  componentWillMount () {
-    db.ref('/notes-indexes').once('value', (snapshot) => {
+  async componentWillMount () {
+    try {
+      const snapshot = await db.ref('/notes-indexes').once('value')
+
       if (snapshot.val()) {
         this.setState({
           notes: Object.values(snapshot.val()),
           loading: false
         })
       }
-    })
+    } catch (error) {
+      this.setState({
+        error: error
+      })
+    }
   }
 
   saveMarkdown = (markdown) => {
@@ -51,12 +58,12 @@ class App extends Component {
     })
   }
 
-  handleViewNote = (id) => (event) => {
-    this.setState({
-      id
-    })
+  handleViewNote = (id) => async (event) => {
+    this.setState({ id })
 
-    db.ref(`/notes/${id}`).once('value', (snapshot) => {
+    try {
+      const snapshot = db.ref(`/notes/${id}`).once('value')
+
       if (snapshot.val()) {
         this.setState({
           id: id,
@@ -69,7 +76,9 @@ class App extends Component {
           createdAt: Date.now()
         })
       }
-    })
+    } catch (error) {
+      this.setState({ error })
+    }
   }
 
   handleNewNote = () => {
@@ -82,7 +91,7 @@ class App extends Component {
 
     const newNote = {
       id: id,
-      title: 'New Title',
+      title: 'New Note',
       markdown: '',
       createdAt: Date.now()
     }
