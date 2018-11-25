@@ -2,10 +2,8 @@ import React, { Component } from 'react'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-markdown'
 import { debounce } from 'throttle-debounce'
-import removeMd from 'remove-markdown'
-import uuidv4 from 'uuid/v4'
 
-import { db } from './firebase'
+import * as api from './services/api'
 import ShowMarkdown from './components/ShowMarkdown'
 import TextEditor from './components/TextEditor'
 import Menu from './components/Menu'
@@ -37,17 +35,22 @@ class App extends Component {
 
   async componentWillMount () {
     try {
-      const snapshot = await db.ref('/notes-indexes').once('value')
+      const snapshot = await api.getNotes()
 
       if (snapshot.val()) {
         this.setState({
           notes: Object.values(snapshot.val()),
           loading: false
         })
+      } else {
+        this.setState({
+          loading: false
+        })
       }
     } catch (error) {
       this.setState({
-        error: error
+        error: error,
+        loading: false
       })
     }
   }
@@ -72,17 +75,16 @@ class App extends Component {
   }
 
   saveMarkdown = (markdown) => {
-    db.ref(`/notes/${this.state.id}`).set({
-      updatedAt: Date.now(),
-      markdown: markdown
-    })
+    if (this.state.id !== "") {
+      api.updateNote(this.state.id, markdown)
+    }
   }
 
   handleViewNote = (id) => async (event) => {
     this.setState({ id })
 
     try {
-      const snapshot = db.ref(`/notes/${id}`).once('value')
+      const snapshot = await api.getNote(id)
 
       if (snapshot.val()) {
         this.setState({
@@ -101,30 +103,23 @@ class App extends Component {
     }
   }
 
-  handleNewNote = () => {
-    const id = uuidv4()
-
-    db.ref(`/notes/${id}`).set({
-      markdown: '',
-      createdAt: Date.now()
-    })
-
+  handleNewNote = async () => {
     const newNote = {
-      id: id,
       title: 'New Note',
       markdown: '',
       createdAt: Date.now()
     }
 
+    const noteId = await api.createNote({ ...newNote })
+
     this.setState({
-      notes: [ newNote, ...this.state.notes ],
-      noteTitleEditing: id
+      notes: [ { ...newNote, id: noteId }, ...this.state.notes ],
+      noteTitleEditing: noteId
     })
   }
 
   handleDeleteNote = (noteId) => () => {
-    db.ref(`/notes/${noteId}`).remove()
-    db.ref(`/notes-indexes/${noteId}`).remove()
+    api.deleteNote(noteId)
 
     this.setState({
       notes: this.state.notes.filter(note => note.id !== noteId)
@@ -132,15 +127,13 @@ class App extends Component {
   }
 
   handleNewNoteTitleChange = (event) => {
-    this.setState({
-      newNoteTitle: event.currentTarget.value
-    })
+    this.setState({ newNoteTitle: event.currentTarget.value })
   }
 
   handleNewNoteTitleSubmit = noteId => event => {
     event.preventDefault()
 
-    db.ref(`/notes-indexes/${noteId}/title`).set(this.state.newNoteTitle)
+    api.updateNoteTitle(noteId, this.state.newNoteTitle)
 
     this.setState({
       newNoteTitle: 'New Note',
@@ -155,11 +148,6 @@ class App extends Component {
           return note
         }
       })
-    })
-
-    db.ref(`/notes-indexes/${noteId}`).set({
-      id: noteId,
-      title: this.state.newNoteTitle
     })
   }
 

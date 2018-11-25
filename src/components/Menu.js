@@ -101,7 +101,10 @@ const Menu = ({
           )}
 
           { note.id !== noteTitleEditing && (
-            <StyledMenuItem active={activeItem === note.id}>
+            <StyledMenuItem
+              active={activeItem === note.id}
+              key={note.id}
+            >
               <div className="title" onClick={onViewNote(note.id)}>
                 { note.title }
               </div>
