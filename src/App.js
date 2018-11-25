@@ -1,4 +1,6 @@
 import React, { Component } from 'react'
+import Prism from 'prismjs'
+import 'prismjs/components/prism-markdown'
 import { debounce } from 'throttle-debounce'
 import removeMd from 'remove-markdown'
 
@@ -6,6 +8,11 @@ import { db } from './firebase'
 import ShowMarkdown from './components/ShowMarkdown'
 import TextEditor from './components/TextEditor'
 import Menu from './components/Menu'
+
+import {
+  matchEmptyCheckbox,
+  matchCheckedCheckbox
+} from './regex'
 
 class App extends Component {
   constructor (props) {
@@ -18,21 +25,26 @@ class App extends Component {
     id: "teste",
     title: "New Note",
     updatedAt: 0,
-    markdown: ""
+    markdown: "",
+    highlights: "",
+    loading: true
   }
 
-  componentDidMount () {
+  componentWillMount () {
     db.ref(this.state.id).once('value', (snapshot) => {
       if (snapshot.val()) {
-        this.setState({ ...snapshot.val() })
+        this.setState({
+          ...snapshot.val(),
+          loading: false
+        })
       }
     })
   }
 
-  saveMarkdown = () => {
+  saveMarkdown = (markdown) => {
     db.ref(this.state.id).set({
       updatedAt: Date.now(),
-      markdown: this.state.markdown
+      markdown: markdown
     })
   }
 
@@ -41,37 +53,49 @@ class App extends Component {
       if (snapshot.val()) {
         this.setState({ ...snapshot.val() })
       } else {
-        this.setState({ id: id, markdown: "", createdAt: Date.now() })
+        this.setState({
+          id: id,
+          markdown: "",
+          createdAt: Date.now()
+        })
       }
     })
   }
 
-  onNoteChange = (event) => {
-    const value = event.currentTarget.value
-    const valueLines = value.split('\n')
-    const title = valueLines.length > 0 ? removeMd(valueLines[0]) : 'New Note'
+  applyHighlights (text) {
+    return Prism.highlight(text, Prism.languages.markdown, 'markdown')
+      .replace(matchEmptyCheckbox, '<span class="checkbox">$&</span>')
+      .replace(matchCheckedCheckbox, '<span class="checkbox checked">$&</span>')
+  }
 
+  onNoteChange = (cursorPosition, value) => {
     this.setState({
-      ...this.state,
-      title,
-      markdown: event.currentTarget.value
+      markdown: value,
     })
 
-    this.saveMarkdown()
+    this.saveMarkdown(value)
+    this.applyHighlights(value)
   }
 
   render() {
-    return (
-      <div style={{ display: 'flex'}}>
-        <Menu onViewNote={this.handleViewNote} />
-        <TextEditor
-          onChange={this.onNoteChange}
-          value={this.state.markdown}
-        />
+    if (!this.state.loading) {
+      return (
+        <div style={{ display: 'flex'}}>
+          <Menu onViewNote={this.handleViewNote} />
+          <TextEditor
+            onChange={this.onNoteChange}
+            value={this.state.markdown}
+            highlights={this.applyHighlights(this.state.markdown)}
+          />
 
-        <ShowMarkdown markdown={this.state.markdown} />
-      </div>
-    );
+          <ShowMarkdown markdown={this.state.markdown} />
+        </div>
+      );
+    } else {
+      return (
+        <div>Loading...</div>
+      )
+    }
   }
 }
 
