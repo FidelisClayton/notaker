@@ -31,7 +31,8 @@ class App extends Component {
     markdown: "",
     highlights: "",
     loading: true,
-    error: null
+    error: null,
+    noteTitleEditing: null
   }
 
   async componentWillMount () {
@@ -47,6 +48,25 @@ class App extends Component {
     } catch (error) {
       this.setState({
         error: error
+      })
+    }
+  }
+
+  componentDidMount () {
+    document.addEventListener('keydown', this.handleKeyDown)
+  }
+
+  componentWillUnmount () {
+    document.removeEventListener('keydown', this.handleKeyDown)
+  }
+
+  handleKeyDown = (event) => {
+    if (event.key === 'F2') {
+      event.preventDefault()
+
+      this.setState({
+        newNoteTitle: this.state.title,
+        noteTitleEditing: this.state.id
       })
     }
   }
@@ -102,6 +122,15 @@ class App extends Component {
     })
   }
 
+  handleDeleteNote = (noteId) => () => {
+    db.ref(`/notes/${noteId}`).remove()
+    db.ref(`/notes-indexes/${noteId}`).remove()
+
+    this.setState({
+      notes: this.state.notes.filter(note => note.id !== noteId)
+    })
+  }
+
   handleNewNoteTitleChange = (event) => {
     this.setState({
       newNoteTitle: event.currentTarget.value
@@ -111,7 +140,7 @@ class App extends Component {
   handleNewNoteTitleSubmit = noteId => event => {
     event.preventDefault()
 
-    db.ref(`/${noteId}/title`).set(this.state.newNoteTitle)
+    db.ref(`/notes-indexes/${noteId}/title`).set(this.state.newNoteTitle)
 
     this.setState({
       newNoteTitle: 'New Note',
@@ -161,7 +190,9 @@ class App extends Component {
             noteTitleEditing={this.state.noteTitleEditing}
             notes={this.state.notes}
             activeItem={this.state.id}
+            deleteNote={this.handleDeleteNote}
           />
+
           <TextEditor
             onChange={this.onNoteChange}
             value={this.state.markdown}

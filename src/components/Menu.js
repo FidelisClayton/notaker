@@ -2,6 +2,8 @@ import React from 'react'
 import styled from 'styled-components'
 import MenuDivider from './MenuDivider'
 
+import garbage from '../assets/garbage.svg'
+
 const StyledMenu = styled.nav`
   padding: 1em;
   width: 250px;
@@ -26,9 +28,19 @@ const StyledMenu = styled.nav`
 const StyledMenuItem = styled.li`
   padding: 10px;
   color: ${props => props.active ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.3)'};
+  display: flex;
+  justify-content: space-between;
 
   &:hover {
     color: rgba(255, 255, 255, 0.8);
+
+    img {
+      opacity: 0.8;
+    }
+  }
+
+  .title {
+    flex: 1;
   }
 
   input {
@@ -42,6 +54,15 @@ const StyledMenuItem = styled.li`
   }
 `
 
+const ImageIcon = styled.img`
+  width: 12px;
+  opacity: 0.3;
+
+  &:hover {
+    opacity: 1;
+  }
+`
+
 const Menu = ({
   onViewNote,
   onNewNote,
@@ -49,7 +70,8 @@ const Menu = ({
   onNewNoteTitleSubmit,
   noteTitleEditing,
   notes,
-  activeItem
+  activeItem,
+  deleteNote
 }) => (
   <StyledMenu>
     <MenuDivider
@@ -63,7 +85,6 @@ const Menu = ({
       { notes.map(note => (
         <a
           href={`#/${note.id}`}
-          onClick={onViewNote(note.id)}
           key={note.id}
         >
           { note.id === noteTitleEditing && (
@@ -81,7 +102,16 @@ const Menu = ({
 
           { note.id !== noteTitleEditing && (
             <StyledMenuItem active={activeItem === note.id}>
-              { note.title }
+              <div className="title" onClick={onViewNote(note.id)}>
+                { note.title }
+              </div>
+
+              <div>
+                <ImageIcon
+                  onClick={deleteNote(note.id)}
+                  src={garbage}
+                />
+              </div>
             </StyledMenuItem>
           )}
         </a>
