@@ -1,7 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import convert from 'htmr'
 
 import md from '../markdown'
 
@@ -77,9 +76,7 @@ const StyledShowMarkdown = styled.div`
 `
 
 const ShowMarkdown = ({ markdown }) => (
-  <StyledShowMarkdown>
-    { convert(md.render(markdown)) }
-  </StyledShowMarkdown>
+  <StyledShowMarkdown dangerouslySetInnerHTML={{ __html: md.render(markdown) }} />
 )
 
 ShowMarkdown.propTypes = {

@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import styled from 'styled-components'
+import collapse from '../assets/collapse.svg'
+import expand from '../assets/expand.svg'
 
 const Container = styled.div`
   position: relative;
@@ -7,10 +9,35 @@ const Container = styled.div`
   font-size: 1rem;
   flex: 1;
   height: 100vh;
-  overflow-y: hidden;
+  overflow: hidden;
   box-sizing: border-box;
   background-color: #272E36;
   padding-bottom: 1em;
+  padding-left: 20px;
+  display: flex;
+  align-items: center;
+
+  ${props => props.fullscreen && `
+    position: absolute;
+    z-index: 100;
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+
+    .text-editor,
+    .backdrop {
+      width: 50vw;
+    }
+
+    .highlights {
+      width: calc(50vw - 15px);
+    }
+
+    .backdrop {
+      overflow-y: hidden;
+    }
+  `}
 `
 
 const Highlights = styled.div`
@@ -20,14 +47,12 @@ const Highlights = styled.div`
   font-family: 'IBM Plex Mono', monospace;
   font-size: 1rem;
   width: 100%;
-  height: 100%;
   resize: none;
   border: 0;
   margin: 0;
   padding: 0;
   color: #FFFFFF;
   background: transparent;
-  padding: 1em;
   box-sizing: border-box;
   outline: none;
 
@@ -55,29 +80,46 @@ const Highlights = styled.div`
 `
 
 const Backdrop = styled.div`
+  position: relative;
   overflow-y: auto;
-  height: 100%;
+  height: 90vh;
 `
 
 const StyledTextEditor = styled.textarea`
   font-family: 'IBM Plex Mono', monospace;
   font-size: 1rem;
-  width: 100%;
-  height: 100%;
+  width: calc(100% - 20px);
+  height: 90vh;
   resize: none;
   border: 0;
   margin: 0;
   padding: 0;
-  color: #FFFFFF;
   background: transparent;
-  padding: 1em;
   box-sizing: border-box;
   outline: none;
   position: absolute;
-  top: 0;
   z-index: 2;
   color: transparent;
   caret-color: red;
+`
+
+const Collapse = styled.img`
+  width: 20px;
+  position: fixed;
+  cursor: pointer;
+  z-index: 101;
+  opacity: 0.3;
+  top: 20px;
+  left: calc(50vw + 70px);
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  ${props => props.collapsed && `
+    left: auto;
+    right: 20px;
+  `}
 `
 
 class TextEditor extends Component {
@@ -104,8 +146,26 @@ class TextEditor extends Component {
 
   render () {
     return (
-      <Container>
-        <Backdrop ref={this.backdropRef}>
+      <Container fullscreen={this.props.isFullscreen}>
+        { this.props.isFullscreen && (
+          <Collapse
+            src={collapse}
+            onClick={this.props.toggleFullscreen}
+            collapsed
+          />
+        )}
+
+        <Backdrop
+          className="backdrop"
+          ref={this.backdropRef}
+        >
+          { !this.props.isFullscreen && (
+            <Collapse
+              src={expand}
+              onClick={this.props.toggleFullscreen}
+            />
+          )}
+
           <Highlights
             className="highlights language-markdown"
             dangerouslySetInnerHTML={{ __html: this.props.highlights }}
@@ -113,10 +173,12 @@ class TextEditor extends Component {
         </Backdrop>
 
         <StyledTextEditor
+          className="text-editor"
           value={this.props.value}
           onChange={this.handleOnChange}
           onScroll={this.handleTextAreaScroll}
           ref={this.textAreaRef}
+          autoFocus
         />
       </Container>
     )

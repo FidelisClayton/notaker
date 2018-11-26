@@ -30,7 +30,8 @@ class App extends Component {
     highlights: "",
     loading: true,
     error: null,
-    noteTitleEditing: null
+    noteTitleEditing: null,
+    fullscreen: false
   }
 
   async componentWillMount () {
@@ -61,6 +62,12 @@ class App extends Component {
 
   componentWillUnmount () {
     document.removeEventListener('keydown', this.handleKeyDown)
+  }
+
+  toggleFullscreen = () => {
+    this.setState({
+      fullscreen: !this.state.fullscreen
+    })
   }
 
   handleKeyDown = (event) => {
@@ -114,7 +121,8 @@ class App extends Component {
 
     this.setState({
       notes: [ { ...newNote, id: noteId }, ...this.state.notes ],
-      noteTitleEditing: noteId
+      noteTitleEditing: noteId,
+      id: noteId
     })
   }
 
@@ -185,6 +193,8 @@ class App extends Component {
             onChange={this.onNoteChange}
             value={this.state.markdown}
             highlights={this.applyHighlights(this.state.markdown)}
+            toggleFullscreen={this.toggleFullscreen}
+            isFullscreen={this.state.fullscreen}
           />
 
           <ShowMarkdown markdown={this.state.markdown} />
